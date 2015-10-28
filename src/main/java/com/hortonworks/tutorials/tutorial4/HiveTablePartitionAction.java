@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import org.apache.storm.hdfs.common.rotation.RotationAction;
 
 /**
- * When an HDFS File Rotation policy executes, this action will create hive partition 
+ * When an HDFS File Rotation policy executes, this action will create hive partition
  * based on the timestamp of the file and load the hdfs file into the partition
  * @author gvetticaden
  *
@@ -26,17 +26,17 @@ public class HiveTablePartitionAction implements RotationAction {
 
 
 	private static final long serialVersionUID = 2725320320183384402L;
-	
+
 	private static final Logger LOG = Logger.getLogger(HiveTablePartitionAction.class);
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-	
+
 	private String sourceMetastoreUrl;
 	private String databaseName;
 	private String tableName;
 	private String sourceFSrl;
-	
-	
-	
+
+
+
 	public HiveTablePartitionAction(String sourceMetastoreUrl,String tableName, String databaseName, String sourceFSUrl) {
 		super();
 		this.sourceMetastoreUrl = sourceMetastoreUrl;
@@ -47,23 +47,22 @@ public class HiveTablePartitionAction implements RotationAction {
 		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
-	@Override
 	public void execute(FileSystem fileSystem, Path filePath)
 			throws IOException {
-		
+
 		long timeStampFromFile= getTimestamp(filePath.getName());
 		Date date = new Date(timeStampFromFile);
-		
-		
+
+
 		String datePartitionName = constructDatePartitionName(date);
 		String hourPartitionName = constructHourPartitionName(date);
-		
-		String fileNameWithSchema = sourceFSrl + filePath.toString();		
-		
+
+		String fileNameWithSchema = sourceFSrl + filePath.toString();
+
 		addFileToPartition(fileNameWithSchema, datePartitionName, hourPartitionName);
 
 	}
-	
+
     private String constructHourPartitionName(Date date) {
 		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		calendar.setTime(date);
@@ -73,7 +72,7 @@ public class HiveTablePartitionAction implements RotationAction {
 		} else {
 			return String.valueOf(hour);
 		}
-		
+
 	}
 
 	private String constructDatePartitionName(Date date) {
@@ -88,18 +87,18 @@ public class HiveTablePartitionAction implements RotationAction {
 	}
 
 	private void addFileToPartition(String fileNameWithSchema, String datePartitionName, String hourPartitionName ) {
-         
+
         loadData(fileNameWithSchema, datePartitionName, hourPartitionName);
-        
-    }	
-    
-    public void loadData(String path, String datePartitionName, String hourPartitionName ) 
+
+    }
+
+    public void loadData(String path, String datePartitionName, String hourPartitionName )
     {
-    	
+
     	String partitionValue = datePartitionName + "-" + hourPartitionName;
-    	
+
     	LOG.info("About to add file["+ path + "] to a partitions["+partitionValue + "]");
-    	
+
     	StringBuilder ddl = new StringBuilder();
     	ddl.append(" load data inpath ")
 			.append(" '").append(path).append("' ")
@@ -116,8 +115,8 @@ public class HiveTablePartitionAction implements RotationAction {
 			LOG.error(errorMessage, e);
 			throw new RuntimeException(errorMessage, e);
 		}
-}    
-    
+}
+
     public void startSessionState(String metaStoreUrl) {
         HiveConf hcatConf = new HiveConf();
         hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metaStoreUrl);
@@ -125,8 +124,8 @@ public class HiveTablePartitionAction implements RotationAction {
         hcatConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
         hcatConf.set("hive.root.logger", "DEBUG,console");
         SessionState.start(hcatConf);
-    }   
-    
+    }
+
     public void execHiveDDL(String ddl) throws Exception {
         LOG.info("Executing ddl = " + ddl);
 
@@ -136,6 +135,6 @@ public class HiveTablePartitionAction implements RotationAction {
         if (response.getResponseCode() > 0) {
             throw new Exception(response.getErrorMessage());
         }
-    }    
+    }
 
 }

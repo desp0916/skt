@@ -19,9 +19,9 @@ import org.apache.storm.hdfs.common.rotation.RotationAction;
  * When an HDFS File Rotation policy executes, this action will create hive
  * partition based on the timestamp of the file and load the hdfs file into the
  * partition
- * 
+ *
  * @author gvetticaden
- * 
+ *
  */
 public class HiveTablePartitionAction implements RotationAction {
 
@@ -45,9 +45,9 @@ public class HiveTablePartitionAction implements RotationAction {
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
-  @Override
   public void execute(FileSystem fileSystem, Path filePath) throws IOException {
 
+//	fileSystem.setPermission(filePath, new FsPermission((short)0777));
     long timeStampFromFile = getTimestamp(filePath.getName());
     Date date = new Date(timeStampFromFile);
 
@@ -97,7 +97,7 @@ public class HiveTablePartitionAction implements RotationAction {
 
     StringBuilder ddl = new StringBuilder();
     ddl.append(" load data inpath ").append(" '").append(path).append("' ").append(" into table ").append(tableName)
-        .append(" partition ").append(" (date='").append(partitionValue).append("')");
+        .append(" partition ").append(" (ds='").append(partitionValue).append("')");
 
     startSessionState(sourceMetastoreUrl);
     try {

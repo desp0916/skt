@@ -31,7 +31,7 @@ public class FileTimeRotationPolicy implements FileRotationPolicy {
 
     public static enum Units {
 
-        SECONDS((long) 1000),
+        SECONDS(1000),
         MINUTES((long) 1000 * 60),
         HOURS((long) 1000 * 60 * 60),
         DAYS((long) 1000 * 60 * 60);
@@ -54,14 +54,12 @@ public class FileTimeRotationPolicy implements FileRotationPolicy {
         this.maxMilliSeconds = (long) (count * units.getMilliSeconds());
     }
 
-    @Override
     public boolean mark(Tuple tuple, long offset) {
         // The offsett is not used here as we are rotating based on time
         long diff = (new Date()).getTime() - this.lastCheckpoint;
         return diff >= this.maxMilliSeconds;
     }
 
-    @Override
     public void reset() {
         this.lastCheckpoint = new Long((new Date()).getTime());
     }
